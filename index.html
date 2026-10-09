@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UP Weather, Time & Themes | उत्तर प्रदेश मौसम</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Mukta:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --bg: #eef2f5;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --ink: #17212b;
+      --text: #17212b;
+      --muted: #5b6875;
+      --line: #d6dde3;
+      --accent: #0f766e;
+      --accent-text: #ffffff;
+      --sun: #a35f00;
+      --rain: #1f6a93;
+      --warn-fg: #7a4700;
+      --warn-bg: #fff0d1;
+      --crit-fg: #8f1d17;
+      --crit-bg: #fde4e1;
+      --info-fg: #17506f;
+      --info-bg: #dfeef7;
+      --focus: #1f6a93;
+      --font-display: "Bricolage Grotesque", "Mukta", system-ui, sans-serif;
+      --font-body: "Mukta", system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    [data-theme="dark"] {
+      --bg: #10161c;
+      --surface: #18222b;
+      --card: #18222b;
+      --text: #e8eef3;
+      --ink: #e8eef3;
+      --muted: #9aa8b4;
+      --line: #2b3945;
+      --accent: #22d3ee;
+      --accent-text: #06121a;
+      --sun: #f0a93a;
+      --rain: #6bb6df;
+      --warn-fg: #f6c97a;
+      --warn-bg: #3a2c10;
+      --crit-fg: #f5a9a3;
+      --crit-bg: #3d1a17;
+      --info-fg: #9fd3ee;
+      --info-bg: #14303f;
+      --focus: #6bb6df;
+      color-scheme: dark;
+    }
+
+    [data-theme="sunset"] {
+      --bg: #fff4ec;
+      --surface: #fffaf5;
+      --card: #fffaf5;
+      --text: #40241a;
+      --ink: #40241a;
+      --muted: #7c5a4b;
+      --line: #f0d3c2;
+      --accent: #d9541e;
+      --accent-text: #ffffff;
+    }
+
+    [data-theme="forest"] {
+      --bg: #eef6ee;
+      --surface: #f7fcf7;
+      --card: #f7fcf7;
+      --text: #16301f;
+      --ink: #16301f;
+      --muted: #54705d;
+      --line: #cfe3d2;
+      --accent: #2f7d32;
+      --accent-text: #ffffff;
+    }
+
+    [data-theme="royal"] {
+      --bg: #f2f0ff;
+      --surface: #faf9ff;
+      --card: #faf9ff;
+      --text: #221a44;
+      --ink: #221a44;
+      --muted: #625a86;
+      --line: #d9d3f5;
+      --accent: #5b3cc4;
+      --accent-text: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.5;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .brand h1 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.8rem, 5vw, 2.7rem); line-height: 1.1; margin: 0; }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+    
+    .header-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .lang { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+    .lang button { border: 0; background: transparent; padding: 6px 14px; font-weight: 600; min-height: 40px; }
+    .lang button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    h2 { font-family: var(--font-display); margin: 0 0 14px; font-size: 1.25rem; }
+
+    .themes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .theme-btn {
+      border: 1px solid var(--line);
+      background: var(--bg);
+      color: var(--text);
+      padding: 10px 18px;
+      min-height: 44px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .theme-btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .theme-btn.active { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+
+    .finder { margin-bottom: 18px; display: grid; gap: 12px; }
+    .searchrow { display: flex; gap: 10px; flex-wrap: wrap; position: relative; }
+    .searchbox { flex: 1 1 260px; min-width: 0; position: relative; }
+    .searchbox input { width: 100%; min-height: 48px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+    .btn { min-height: 48px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-weight: 600; }
+    .btn:hover { border-color: var(--muted); }
+    .btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+    
+    .results { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); max-height: 320px; overflow-y: auto; }
+    .results button { width: 100%; text-align: left; background: transparent; border: 0; padding: 10px 12px; border-radius: 6px; min-height: 44px; }
+    .results button:hover, .results button:focus-visible { background: var(--bg); }
+    .results small, .results .msg { color: var(--muted); display: block; }
+    .results .msg { padding: 10px 12px; }
+    
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .chips .lbl { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+    .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 14px; min-height: 40px; }
+    .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+    .alerts { display: grid; gap: 8px; margin-bottom: 18px; }
+    .alert { padding: 12px 14px; border-radius: 10px; font-weight: 600; border: 1px solid transparent; }
+    .alert.crit { background: var(--crit-bg); color: var(--crit-fg); border-color: var(--crit-fg); }
+    .alert.warn { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-fg); }
+    .alert.info { background: var(--info-bg); color: var(--info-fg); border-color: var(--info-fg); }
+    .alert.calm { background: var(--surface); color: var(--muted); font-weight: 400; border-color: var(--line); }
+
+    .status { margin-bottom: 18px; padding: 14px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+    .status.error { color: var(--crit-fg); background: var(--crit-bg); }
+
+    .grid { display: grid; gap: 16px; margin-bottom: 18px; grid-template-columns: 1fr; }
+    @media (min-width: 780px) { .grid { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); } }
+    
+    .place { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .place h2 { margin: 0; font-size: 1.5rem; line-height: 1.2; }
+    .place .sub { color: var(--muted); font-size: 0.9rem; }
+    .refresh { min-height: 40px; padding: 4px 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; font-size: 0.9rem; }
+    
+    .reading { display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+    .temp { font-family: var(--font-display); font-weight: 800; font-size: clamp(4rem, 14vw, 6.5rem); line-height: 0.95; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    .temp sup { font-size: 0.35em; font-weight: 600; vertical-align: top; position: relative; top: 0.25em; color: var(--sun); }
+    .cond { font-size: 1.15rem; font-weight: 600; }
+    .feels { color: var(--muted); }
+    .ico { width: 56px; height: 56px; color: var(--sun); flex: none; }
+    .ico.sm { width: 36px; height: 36px; }
+
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; margin: 0; }
+    @media (min-width: 480px) { .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .stat { padding: 10px 6px; border-bottom: 1px solid var(--line); min-width: 0; }
+    .stat dt { color: var(--muted); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .stat dd { margin: 2px 0 0; font-weight: 700; font-size: 1.15rem; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .stat dd small { font-weight: 400; color: var(--muted); font-size: 0.8rem; }
+
+    .block { margin-bottom: 18px; }
+    .hours { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
+    .hour { flex: 0 0 76px; scroll-snap-align: start; text-align: center; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 4px; font-variant-numeric: tabular-nums; }
+    .hour .t { color: var(--muted); font-size: 0.85rem; }
+    .hour .ico { margin: 4px auto; display: block; }
+    .hour .v { font-weight: 700; }
+    .hour .p { color: var(--rain); font-size: 0.85rem; }
+
+    .days { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 4px 16px; }
+    .day { display: grid; grid-template-columns: 64px 36px minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+    .day:last-child { border-bottom: 0; }
+    .day .dn { font-weight: 700; }
+    .day .dn small { display: block; color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+    .day .rng { display: grid; grid-template-columns: 2.6em minmax(0, 1fr) 2.6em; gap: 8px; align-items: center; font-variant-numeric: tabular-nums; }
+    .day .rng .lo { color: var(--muted); text-align: right; }
+    .day .rng .hi { font-weight: 700; }
+    .track { position: relative; height: 8px; border-radius: 4px; background: var(--line); }
+    .track i { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: linear-gradient(90deg, var(--rain), var(--sun)); }
+    .day .meta { grid-column: 3; color: var(--rain); font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+
+    .clock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .clock {
+      background: var(--bg);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .city-name {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .time-val {
+      margin-top: 4px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .date-val {
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 24px;
+      display: grid;
+      gap: 6px;
+    }
+    footer a { color: var(--accent); }
+    .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 480px) { .clock-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand">
+        <h1 id="t-title">UP Weather, Time & Themes</h1>
+        <p id="t-sub">Live weather, local & global clocks, and themes for all 75 districts of Uttar Pradesh</p>
+      </div>
+      <div class="header-controls">
+        <div class="lang" role="group" aria-label="Language">
+          <button type="button" data-lang="en" aria-pressed="true">English</button>
+          <button type="button" data-lang="hi" aria-pressed="false">हिन्दी</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Theme Switcher Card -->
+    <section class="card">
+      <h2>🎨 Screen Themes</h2>
+      <div class="themes">
+        <button class="theme-btn active" data-theme="light">☀️ Light</button>
+        <button class="theme-btn" data-theme="dark">🌙 Dark</button>
+        <button class="theme-btn" data-theme="sunset">🌅 Sunset</button>
+        <button class="theme-btn" data-theme="forest">🌳 Forest</button>
+        <button class="theme-btn" data-theme="royal">👑 Royal</button>
+      </div>
+    </section>
+
+    <!-- UP Districts Weather Finder / Search Bar -->
+    <div class="finder">
+      <div class="searchrow">
+        <div class="searchbox">
+          <label class="sr" for="q" id="t-searchlabel">Search any UP district or village</label>
+          <input id="q" type="search" autocomplete="off" placeholder="Type a district name, e.g. Jhansi, Lucknow, Varanasi..." aria-controls="results" aria-expanded="false">
+          <ul class="results" id="results" hidden></ul>
+        </div>
+        <button type="button" class="btn primary" id="loc">Use my location</button>
+      </div>
+      <div class="chips" id="chips" role="group"></div>
+    </div>
+
+    <div id="alerts" class="alerts" aria-live="polite"></div>
+    <div id="status" class="status" role="status">Loading weather...</div>
+
+    <!-- Live Weather Content -->
+    <main id="main" hidden>
+      <div class="grid">
+        <section class="card" aria-labelledby="place-name">
+          <div class="place">
+            <div>
+              <h2 id="place-name"></h2>
+              <div class="sub" id="place-sub"></div>
+            </div>
+            <button type="button" class="refresh" id="refresh">Refresh</button>
+          </div>
+          <div class="reading">
+            <div class="temp" id="temp"></div>
+            <div>
+              <div id="icon"></div>
+              <div class="cond" id="cond"></div>
+              <div class="feels" id="feels"></div>
+            </div>
+          </div>
+        </section>
+        <section class="card" aria-label="Details">
+          <dl class="stats" id="stats"></dl>
+        </section>
+      </div>
+
+      <section class="block">
+        <h3 id="t-hourly">Next 24 hours</h3>
+        <div class="hours" id="hours" tabindex="0"></div>
+      </section>
+
+      <section class="block">
+        <h3 id="t-daily">7-day forecast</h3>
+        <div class="days" id="days"></div>
+      </section>
+    </main>
+
+    <!-- World Clocks Section -->
+    <section class="card">
+      <h2>🕒 International Time Zones</h2>
+      <div class="clock-grid">
+        <div class="clock">
+          <div class="city-name">Jhansi / India</div>
+          <div class="time-val" data-zone="Asia/Kolkata">--:--:--</div>
+          <div class="date-val" data-date="Asia/Kolkata"></div>
+        </div>
+        <div class="clock">
+          <div class="city-name">New York</div>
+          <div class="time-val" data-zone="America/New_York">--:--:--</div>
+          <div class="date-val" data-date="America/New_York"></div>
+        </div>
+        <div class="clock">
+          <div class="city-name">London</div>
+          <div class="time-val" data-zone="Europe/London">--:--:--</div>
+          <div class="date-val" data-date="Europe/London"></div>
+        </div>
+        <div class="clock">
+          <div class="city-name">Dubai</div>
+          <div class="time-val" data-zone="Asia/Dubai">--:--:--</div>
+          <div class="date-val" data-date="Asia/Dubai"></div>
+        </div>
+        <div class="clock">
+          <div class="city-name">Tokyo</div>
+          <div class="time-val" data-zone="Asia/Tokyo">--:--:--</div>
+          <div class="date-val" data-date="Asia/Tokyo"></div>
+        </div>
+        <div class="clock">
+          <div class="city-name">Sydney</div>
+          <div class="time-val" data-zone="Australia/Sydney">--:--:--</div>
+          <div class="date-val" data-date="Australia/Sydney"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div><span id="updated"></span> | <span id="t-note"></span></div>
+      <div><a href="https://mausam.imd.gov.in/" target="_blank" rel="noopener">India Meteorological Department</a></div>
+      <div>© <span id="year"></span> UP Time & Mausam. All rights reserved.</div>
+    </footer>
+  </div>
+
+  <noscript><div class="wrap">This page needs JavaScript to show the weather and world clocks.</div></noscript>
+
+  <script>
+    (function () {
+      'use strict';
+
+      // --- Theme Switcher Logic ---
+      const themeButtons = document.querySelectorAll(".theme-btn");
+      function setTheme(theme) {
+        document.documentElement.setAttribute("data-theme", theme);
+        themeButtons.forEach(button => {
+          button.classList.toggle("active", button.dataset.theme === theme);
+        });
+        localStorage.setItem("selectedTheme", theme);
+      }
+      themeButtons.forEach(button => {
+        button.addEventListener("click", () => setTheme(button.dataset.theme));
+      });
+      const savedTheme = localStorage.getItem("selectedTheme");
+      if (savedTheme) setTheme(savedTheme);
+
+      // --- World Clocks Logic ---
+      const zones = document.querySelectorAll("[data-zone]");
+      function updateClocks() {
+        const now = new Date();
+        zones.forEach(element => {
+          const zone = element.dataset.zone;
+          element.textContent = now.toLocaleTimeString("en-IN", {
+            timeZone: zone,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true
+          });
+          const dateElement = document.querySelector(`[data-date="${zone}"]`);
+          if (dateElement) {
+            dateElement.textContent = now.toLocaleDateString("en-IN", {
+              timeZone: zone,
+              weekday: "short",
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            });
+          }
+        });
+      }
+      updateClocks();
+      setInterval(updateClocks, 1000);
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // --- Weather App Logic (All 75 UP Districts Enabled) ---
+      var DEFAULT_PLACE = { lat: 25.4484, lon: 78.5685 };
+      var QUICK = [
+        ['Jhansi', 'झांसी'], ['Lucknow', 'लखनऊ'], ['Kanpur', 'कानपुर'], ['Varanasi', 'वाराणसी'],
+        ['Agra', 'आगरा'], ['Meerut', 'मेरठ'], ['Prayagraj', 'प्रयागराज'], ['Bareilly', 'बरेली'],
+        ['Gorakhpur', 'गोरखपुर'], ['Aligarh', 'अलीगढ़'], ['Moradabad', 'मुरादाबाद']
+      ];
+      var REFRESH_MS = 15 * 60 * 1000;
+
+      var I18N = {
+        en: {
+          title: 'UP Weather, Time & Themes',
+          sub: 'Live weather, local & global clocks, and themes for all 75 districts of Uttar Pradesh',
+          searchLabel: 'Search any UP district or village',
+          searchPh: 'Type a district name, e.g. Lucknow, Kanpur...',
+          myloc: 'Use my location',
+          places: 'Major Districts',
+          refresh: 'Refresh',
+          loading: 'Loading weather...',
+          err: 'Could not load the weather. Check your internet connection and press Refresh.',
+          noRes: 'No place found in Uttar Pradesh. Try another spelling, or use your location.',
+          searching: 'Searching...',
+          locating: 'Finding your location...',
+          locDenied: 'Location is blocked. Allow location in your browser settings, or search by name.',
+          myLocName: 'My location',
+          district: 'Uttar Pradesh',
+          feels: 'Feels like',
+          humidity: 'Humidity',
+          wind: 'Wind',
+          gusts: 'Gusts',
+          pressure: 'Pressure',
+          uv: 'UV index today',
+          aqi: 'Air quality',
+          rainToday: 'Rain today',
+          sunrise: 'Sunrise',
+          sunset: 'Sunset',
+          hourly: 'Next 24 hours',
+          daily: '7-day forecast',
+          today: 'Today',
+          updated: 'Updated',
+          note: 'Forecasts come from computer weather models (Open-Meteo). For official warnings, see India Meteorological Department.',
+          noAlerts: 'No weather warnings in this forecast.',
+          aHeatSevere: 'Severe heat: it may reach {v}°C today. Avoid going out in the afternoon and drink plenty of water.',
+          aHeat: 'Very hot today: up to {v}°C. Carry water and cover your head outdoors.',
+          aRain: 'Heavy rain likely: about {v} mm expected. Take care near streams and low roads.',
+          aRainSoon: 'Rain is likely in the next few hours ({v}% chance).',
+          aStorm: 'Thunderstorm possible in the next 12 hours. Stay indoors during lightning and keep away from trees.',
+          aWind: 'Strong gusts up to {v} km/h. Secure loose items.',
+          aFog: 'Fog now. Drive slowly and keep lights on.',
+          aCold: 'Cold night: down to {v}°C. Keep warm.',
+          aAqi: 'Poor air quality (AQI {v}). Limit time outdoors, especially children and elderly people.',
+          aqiLv: ['Good', 'Moderate', 'Unhealthy for sensitive groups', 'Unhealthy', 'Very unhealthy', 'Hazardous'],
+          days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+          compass: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+          wx: { 0: 'Clear sky', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast', 45: 'Fog', 48: 'Freezing fog',
+            51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle', 56: 'Freezing drizzle', 57: 'Freezing drizzle',
+            61: 'Light rain', 63: 'Rain', 65: 'Heavy rain', 66: 'Freezing rain', 67: 'Freezing rain',
+            71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Snow grains',
+            80: 'Light showers', 81: 'Showers', 82: 'Violent showers', 85: 'Snow showers', 86: 'Snow showers',
+            95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Thunderstorm with hail' }
+        },
+        hi: {
+          title: 'उत्तर प्रदेश मौसम, समय और थीम',
+          sub: 'उत्तर प्रदेश के सभी 75 जिलों के लिए लाइव मौसम, विश्व घड़ी और कस्टमाइज़ेबल थीम',
+          searchLabel: 'कोई भी जिला या गांव खोजें',
+          searchPh: 'जिले का नाम लिखें, जैसे लखनऊ, कानपुर...',
+          myloc: 'मेरी लोकेशन',
+          places: 'प्रमुख जिले',
+          refresh: 'ताज़ा करें',
+          loading: 'मौसम लोड हो रहा है...',
+          err: 'मौसम लोड नहीं हो सका। इंटरनेट जांचें और ताज़ा करें दबाएं।',
+          noRes: 'उत्तर प्रदेश में यह जगह नहीं मिली। सही नाम लिखें या अपनी लोकेशन इस्तेमाल करें।',
+          searching: 'खोज रहे हैं...',
+          locating: 'आपकी लोकेशन ढूंढ रहे हैं...',
+          locDenied: 'लोकेशन बंद है। ब्राउज़र सेटिंग में लोकेशन की अनुमति दें, या नाम से खोजें।',
+          myLocName: 'मेरी लोकेशन',
+          district: 'उत्तर प्रदेश',
+          feels: 'महसूस होता है',
+          humidity: 'नमी',
+          wind: 'हवा',
+          gusts: 'तेज़ झोंके',
+          pressure: 'दबाव',
+          uv: 'आज का यूवी सूचकांक',
+          aqi: 'हवा की गुणवत्ता',
+          rainToday: 'आज की बारिश',
+          sunrise: 'सूर्योदय',
+          sunset: 'सूर्यास्त',
+          hourly: 'अगले 24 घंटे',
+          daily: '7 दिन का पूर्वानुमान',
+          today: 'आज',
+          updated: 'अपडेट',
+          note: 'पूर्वानुमान कंप्यूटर मौसम मॉडल (Open-Meteo) से आते हैं। आधिकारिक चेतावनी के लिए भारतीय मौसम विज्ञान विभाग देखें।',
+          noAlerts: 'इस पूर्वानुमान में कोई मौसम चेतावनी नहीं है।',
+          aHeatSevere: 'भीषण गर्मी: आज तापमान {v}°C तक जा सकता है। दोपहर में बाहर न निकलें और खूब पानी पिएं।',
+          aHeat: 'आज बहुत गर्मी: {v}°C तक। पानी साथ रखें और बाहर सिर ढकें।',
+          aRain: 'भारी बारिश की संभावना: लगभग {v} मिमी। नाले और निचली सड़कों से सावधान रहें।',
+          aRainSoon: 'अगले कुछ घंटों में बारिश की संभावना ({v}%)।',
+          aStorm: 'अगले 12 घंटों में आंधी-तूफ़ान संभव है। बिजली कड़कने पर घर के अंदर रहें, पेड़ों से दूर रहें।',
+          aWind: '{v} किमी/घंटा तक तेज़ झोंके। ढीला सामान बांध लें।',
+          aFog: 'अभी कोहरा है। धीरे चलें और लाइट जलाकर रखें।',
+          aCold: 'ठंडी रात: तापमान {v}°C तक गिरेगा। गर्म रहें।',
+          aAqi: 'हवा की गुणवत्ता खराब (AQI {v})। बाहर कम रहें, खासकर बच्चे और बुज़ुर्ग।',
+          aqiLv: ['अच्छी', 'मध्यम', 'संवेदनशील लोगों के लिए हानिकारक', 'हानिकारक', 'बहुत हानिकारक', 'खतरनाक'],
+          days: ['रवि', 'सोम', 'मंगल', 'बुध', 'गुरु', 'शुक्र', 'शनि'],
+          compass: ['उ', 'उ-पू', 'पू', 'द-पू', 'द', 'द-प', 'प', 'उ-प'],
+          wx: { 0: 'साफ आसमान', 1: 'ज़्यादातर साफ', 2: 'आंशिक बादल', 3: 'घने बादल', 45: 'कोहरा', 48: 'पाला वाला कोहरा',
+            51: 'हल्की फुहार', 53: 'फुहार', 55: 'तेज़ फुहार', 56: 'ठंडी फुहार', 57: 'ठंडी फुहार',
+            61: 'हल्की बारिश', 63: 'बारिश', 65: 'भारी बारिश', 66: 'ठंडी बारिश', 67: 'ठंडी बारिश',
+            71: 'हल्की बर्फ', 73: 'बर्फ', 75: 'भारी बर्फ', 77: 'बर्फ के दाने',
+            80: 'हल्की बौछारें', 81: 'बौछारें', 82: 'तेज़ बौछारें', 85: 'बर्फीली बौछारें', 86: 'बर्फीली बौछारें',
+            95: 'आंधी-तूफ़ान', 96: 'ओलों के साथ तूफ़ान', 99: 'ओलों के साथ तूफ़ान' }
+        }
+      };
+
+      var state = { lang: 'en', place: null, data: null, air: null, loadedAt: 0, busy: false };
+      var $ = function (id) { return document.getElementById(id); };
+
+      function store(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+      function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+      function esc(s) {
+        return String(s).replace(/[&<>"']/g, function (c) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+      }
+      function T(k) { return I18N[state.lang][k]; }
+      function fill(s, v) { return s.replace('{v}', v); }
+      function fetchJSON(url) {
+        var ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var timer = ctl ? setTimeout(function () { ctl.abort(); }, 15000) : null;
+        return fetch(url, ctl ? { signal: ctl.signal } : undefined).then(function (r) {
+          if (timer) clearTimeout(timer);
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        });
+      }
+      function plain(s) { return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+      
+      // Filter checking if the location is anywhere within Uttar Pradesh (all 75 districts)
+      function inUP(r) {
+        return r.country_code === 'IN' && (plain(r.admin1).indexOf('uttar pradesh') !== -1 || plain(r.admin1).indexOf('up') !== -1);
+      }
+
+      function kind(code) {
+        if (code === 0 || code === 1) return 'clear';
+        if (code === 2) return 'partly';
+        if (code === 3) return 'cloud';
+        if (code === 45 || code === 48) return 'fog';
+        if ((code >= 51 && code <= 57)) return 'drizzle';
+        if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return 'rain';
+        if (code >= 95) return 'storm';
+        return 'cloud';
+      }
+      var CLOUD = 'M14 34h20a8 8 0 0 0 .6-16A11 11 0 0 0 13.5 21 7 7 0 0 0 14 34z';
+      function icon(code, isDay, small) {
+        var k = kind(code), p = '';
+        var sun = '<circle cx="24" cy="24" r="7"/><path d="M24 7v5M24 36v5M7 24h5M36 24h5M12 12l3.5 3.5M32.5 32.5L36 36M36 12l-3.5 3.5M15.5 32.5L12 36"/>';
+        if (k === 'clear') p = isDay === 0 ? '<path d="M30 9a15 15 0 1 0 9 26A13 13 0 0 1 30 9z"/>' : sun;
+        else if (k === 'partly') p = '<circle cx="17" cy="15" r="5"/><path d="M17 4v3M6 15h3M9 7l2 2M25 7l-2 2"/><path d="' + CLOUD + '" transform="translate(2 3)"/>';
+        else if (k === 'cloud') p = '<path d="' + CLOUD + '" transform="translate(0 -2)"/>';
+        else if (k === 'fog') p = '<path d="M10 16h28M6 24h30M12 32h28M8 40h22"/>';
+        else if (k === 'drizzle') p = '<path d="' + CLOUD + '" transform="translate(0 -5)"/><path d="M16 36v3M24 38v3M32 36v3"/>';
+        else if (k === 'rain') p = '<path d="' + CLOUD + '" transform="translate(0 -6)"/><path d="M15 34l-2 6M24 34l-2 6M33 34l-2 6"/>';
+        else p = '<path d="' + CLOUD + '" transform="translate(0 -6)"/><path d="M26 30l-6 8h6l-4 7"/>';
+        return '<svg class="ico' + (small ? ' sm' : '') + '" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + p + '</svg>';
+      }
+
+      function wxName(code) { return I18N[state.lang].wx[code] || I18N[state.lang].wx[3]; }
+      function pad(n) { return n < 10 ? '0' + n : '' + n; }
+      function fmtHour(iso) {
+        var h = parseInt(iso.slice(11, 13), 10), ap = h >= 12 ? 'PM' : 'AM';
+        return (h % 12 || 12) + ' ' + ap;
+      }
+      function fmtTime(iso) {
+        var h = parseInt(iso.slice(11, 13), 10), m = iso.slice(14, 16), ap = h >= 12 ? 'PM' : 'AM';
+        return (h % 12 || 12) + ':' + m + ' ' + ap;
+      }
+      function dayInfo(iso) {
+        var y = +iso.slice(0, 4), m = +iso.slice(5, 7), d = +iso.slice(8, 10);
+        var dt = new Date(Date.UTC(y, m - 1, d));
+        return { name: T('days')[dt.getUTCDay()], date: d + '/' + pad(m) };
+      }
+      function round(n) { return Math.round(n); }
+      function compass(deg) { return T('compass')[Math.round(deg / 45) % 8]; }
+      function aqiLevel(v) {
+        var i = v <= 50 ? 0 : v <= 100 ? 1 : v <= 150 ? 2 : v <= 200 ? 3 : v <= 300 ? 4 : 5;
+        return T('aqiLv')[i];
+      }
+
+      function forecastURL(p) {
+        return 'https://api.open-meteo.com/v1/forecast?latitude=' + p.lat + '&longitude=' + p.lon +
+          '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,is_day' +
+          '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day' +
+          '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,uv_index_max,sunrise,sunset' +
+          '&timezone=Asia%2FKolkata&forecast_days=7';
+      }
+      function airURL(p) {
+        return 'https://air-quality-api.open-meteo.com/v1/air-quality?latitude=' + p.lat + '&longitude=' + p.lon +
+          '&current=us_aqi,pm2_5&timezone=Asia%2FKolkata';
+      }
+
+      function setStatus(msg, isErr) {
+        var el = $('status');
+        el.textContent = msg || '';
+        el.hidden = !msg;
+        el.className = 'status' + (isErr ? ' error' : '');
+      }
+
+      function loadWeather(place) {
+        if (place) { state.place = place; store('jm_place', place); }
+        var p = state.place;
+        if (state.busy) { if (place) state.pending = place; return; }
+        state.busy = true;
+        if (!state.data) { $('main').hidden = true; setStatus(T('loading')); }
+        renderChips();
+        var air = fetchJSON(airURL(p)).catch(function () { return null; });
+        return Promise.all([fetchJSON(forecastURL(p)), air]).then(function (res) {
+          state.data = res[0]; state.air = res[1]; state.loadedAt = Date.now();
+          state.busy = false;
+          setStatus('');
+          render();
+          if (state.pending) { var nx = state.pending; state.pending = null; state.data = null; loadWeather(nx); }
+        }).catch(function () {
+          state.busy = false;
+          if (state.pending) { var nx = state.pending; state.pending = null; state.data = null; loadWeather(nx); return; }
+          if (state.data) { render(); setStatus(T('err'), true); }
+          else { setStatus(T('err'), true); }
+        });
+      }
+
+      function hourIndex(f) {
+        var now = f.current.time.slice(0, 13);
+        for (var i = 0; i < f.hourly.time.length; i++) if (f.hourly.time[i].slice(0, 13) >= now) return i;
+        return 0;
+      }
+      function buildAlerts(f, aq) {
+        var out = [], c = f.current, d = f.daily, h = f.hourly, s = hourIndex(f);
+        var maxT = Math.max(d.temperature_2m_max[0], c.temperature_2m), minT = d.temperature_2m_min[0];
+        if (maxT >= 43) out.push({ l: 'crit', t: fill(T('aHeatSevere'), round(maxT)) });
+        else if (maxT >= 40) out.push({ l: 'warn', t: fill(T('aHeat'), round(maxT)) });
+        var codes12 = h.weather_code.slice(s, s + 12), i, sum6 = 0, maxP = 0;
+        for (i = s; i < s + 6 && i < h.precipitation.length; i++) sum6 += h.precipitation[i] || 0;
+        for (i = s; i < s + 6 && i < h.precipitation_probability.length; i++) maxP = Math.max(maxP, h.precipitation_probability[i] || 0);
+        var dayRain = d.precipitation_sum[0] || 0;
+        if (sum6 >= 15 || dayRain >= 30) out.push({ l: 'crit', t: fill(T('aRain'), round(Math.max(sum6, dayRain))) });
+        else if (maxP >= 70) out.push({ l: 'info', t: fill(T('aRainSoon'), maxP) });
+        if (codes12.some(function (x) { return x >= 95; })) out.push({ l: 'crit', t: T('aStorm') });
+        if (c.wind_gusts_10m >= 50) out.push({ l: 'warn', t: fill(T('aWind'), round(c.wind_gusts_10m)) });
+        if (c.weather_code === 45 || c.weather_code === 48) out.push({ l: 'warn', t: T('aFog') });
+        if (minT <= 5) out.push({ l: 'info', t: fill(T('aCold'), round(minT)) });
+        if (aq && aq.current && aq.current.us_aqi >= 151) out.push({ l: 'warn', t: fill(T('aAqi'), round(aq.current.us_aqi)) });
+        return out;
+      }
+
+      function placeName(p) { return (state.lang === 'hi' && p.hi) ? p.hi : (p.en || p.name || T('myLocName')); }
+
+      function render() {
+        var f = state.data; if (!f) return;
+        var c = f.current, d = f.daily, h = f.hourly, p = state.place, aq = state.air;
+        $('main').hidden = false;
+
+        $('place-name').textContent = placeName(p);
+        $('place-sub').textContent = p.sub ? p.sub + ' · ' + T('district') : (p.mine ? p.lat.toFixed(3) + ', ' + p.lon.toFixed(3) : T('district'));
+        $('temp').innerHTML = round(c.temperature_2m) + '<sup>°C</sup>';
+        $('icon').innerHTML = icon(c.weather_code, c.is_day);
+        $('cond').textContent = wxName(c.weather_code);
+        $('feels').textContent = T('feels') + ' ' + round(c.apparent_temperature) + '°C';
+
+        var stats = [
+          [T('humidity'), round(c.relative_humidity_2m) + '<small> %</small>'],
+          [T('wind'), round(c.wind_speed_10m) + '<small> km/h ' + esc(compass(c.wind_direction_10m)) + '</small>'],
+          [T('gusts'), round(c.wind_gusts_10m) + '<small> km/h</small>'],
+          [T('pressure'), round(c.pressure_msl) + '<small> hPa</small>'],
+          [T('uv'), (d.uv_index_max[0] != null ? Math.round(d.uv_index_max[0] * 10) / 10 : '-')],
+          [T('aqi'), aq && aq.current && aq.current.us_aqi != null ? round(aq.current.us_aqi) + '<small> ' + esc(aqiLevel(aq.current.us_aqi)) + '</small>' : '-'],
+          [T('rainToday'), (Math.round((d.precipitation_sum[0] || 0) * 10) / 10) + '<small> mm</small>'],
+          [T('sunrise'), fmtTime(d.sunrise[0])],
+          [T('sunset'), fmtTime(d.sunset[0])]
+        ];
+        $('stats').innerHTML = stats.map(function (s) {
+          return '<div class="stat"><dt>' + esc(s[0]) + '</dt><dd>' + s[1] + '</dd></div>';
+        }).join('');
+
+        var al = buildAlerts(f, aq);
+        $('alerts').innerHTML = al.length ? al.map(function (a) {
+          return '<div class="alert ' + a.l + '" role="alert">' + esc(a.t) + '</div>';
+        }).join('') : '<div class="alert calm">' + esc(T('noAlerts')) + '</div>';
+
+        var s = hourIndex(f), hs = '';
+        for (var i = s; i < s + 24 && i < h.time.length; i++) {
+          hs += '<div class="hour"><div class="t">' + fmtHour(h.time[i]) + '</div>' +
+            icon(h.weather_code[i], h.is_day ? h.is_day[i] : 1, true) +
+            '<div class="v">' + round(h.temperature_2m[i]) + '°</div>' +
+            '<div class="p">' + (h.precipitation_probability[i] != null ? h.precipitation_probability[i] : 0) + '%</div></div>';
+        }
+        $('hours').innerHTML = hs;
+
+        var lo = Math.min.apply(null, d.temperature_2m_min), hi = Math.max.apply(null, d.temperature_2m_max), span = Math.max(hi - lo, 1);
+        var ds = '';
+        for (var j = 0; j < d.time.length; j++) {
+          var di = dayInfo(d.time[j]);
+          var left = (d.temperature_2m_min[j] - lo) / span * 100, width = Math.max((d.temperature_2m_max[j] - d.temperature_2m_min[j]) / span * 100, 4);
+          var rain = (Math.round((d.precipitation_sum[j] || 0) * 10) / 10);
+          ds += '<div class="day"><div class="dn">' + esc(j === 0 ? T('today') : di.name) + '<small>' + di.date + '</small></div>' +
+            icon(d.weather_code[j], 1, true) +
+            '<div class="rng"><span class="lo">' + round(d.temperature_2m_min[j]) + '°</span><span class="track"><i style="left:' + left.toFixed(1) + '%;width:' + width.toFixed(1) + '%"></i></span><span class="hi">' + round(d.temperature_2m_max[j]) + '°</span></div>' +
+            '<div class="meta">' + esc(wxName(d.weather_code[j])) + ' · ' + (d.precipitation_probability_max[j] != null ? d.precipitation_probability_max[j] : 0) + '% · ' + rain + ' mm</div></div>';
+        }
+        $('days').innerHTML = ds;
+
+        var t = new Date(state.loadedAt);
+        $('updated').textContent = T('updated') + ' ' + t.toLocaleTimeString(state.lang === 'hi' ? 'hi-IN' : 'en-IN', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      function renderStatic() {
+        document.documentElement.lang = state.lang;
+        $('t-title').textContent = T('title');
+        $('t-sub').textContent = T('sub');
+        $('t-searchlabel').textContent = T('searchLabel');
+        $('q').placeholder = T('searchPh');
+        $('loc').textContent = T('myloc');
+        $('refresh').textContent = T('refresh');
+        $('t-hourly').textContent = T('hourly');
+        $('t-daily').textContent = T('daily');
+        $('t-note').textContent = T('note');
+        var btns = document.querySelectorAll('.lang button');
+        for (var i = 0; i < btns.length; i++) btns[i].setAttribute('aria-pressed', btns[i].getAttribute('data-lang') === state.lang ? 'true' : 'false');
+        renderChips();
+      }
+
+      function renderChips() {
+        var html = '<span class="lbl">' + esc(T('places')) + '</span>' + QUICK.map(function (q, i) {
+          var on = state.place && !state.place.mine && plain(state.place.en) === plain(q[0]);
+          return '<button type="button" class="chip" data-q="' + i + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(state.lang === 'hi' ? q[1] : q[0]) + '</button>';
+        }).join('');
+        $('chips').innerHTML = html;
+      }
+
+      function geocode(name, lang) {
+        var url = 'https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(name) +
+          '&count=20&language=' + lang + '&format=json';
+        return fetchJSON(url).then(function (r) { return (r.results || []).filter(inUP); });
+      }
+      function toPlace(r, hiName) {
+        var sub = [r.admin2, r.admin3].filter(function (x) { return x && plain(x) !== plain(r.name); })[0] || '';
+        return { en: r.name, hi: hiName || '', lat: r.latitude, lon: r.longitude, sub: sub };
+      }
+      function pickQuick(i) {
+        var q = QUICK[i];
+        var cache = load('up_q_' + q[0]);
+        if (cache) { loadWeather(cache); return; }
+        setStatus(T('searching'));
+        geocode(q[0], 'en').then(function (list) {
+          if (!list.length) { setStatus(T('noRes'), true); return; }
+          var pl = toPlace(list[0], q[1]);
+          pl.en = q[0];
+          store('up_q_' + q[0], pl);
+          state.data = null;
+          loadWeather(pl);
+        }).catch(function () { setStatus(T('err'), true); });
+      }
+
+      var searchTimer = null, searchSeq = 0;
+      function closeResults() { $('results').hidden = true; $('q').setAttribute('aria-expanded', 'false'); }
+      function showResults(html) { $('results').innerHTML = html; $('results').hidden = false; $('q').setAttribute('aria-expanded', 'true'); }
+      function runSearch(text) {
+        var seq = ++searchSeq;
+        showResults('<li class="msg">' + esc(T('searching')) + '</li>');
+        var lang = /[ऀ-ॿ]/.test(text) ? 'hi' : 'en';
+        geocode(text, lang).then(function (list) {
+          if (seq !== searchSeq) return;
+          state.found = list.slice(0, 8).map(function (r) {
+            var pl = toPlace(r);
+            if (lang === 'hi') { pl.hi = r.name; pl.en = r.name; }
+            return pl;
+          });
+          if (!state.found.length) { showResults('<li class="msg">' + esc(T('noRes')) + '</li>'); return; }
+          showResults(state.found.map(function (pl, i) {
+            return '<li><button type="button" data-r="' + i + '">' + esc(placeName(pl)) + '<small>' + esc(pl.sub ? pl.sub + ' · ' + T('district') : T('district')) + '</small></button></li>';
+          }).join(''));
+        }).catch(function () {
+          if (seq === searchSeq) showResults('<li class="msg">' + esc(T('err')) + '</li>');
+        });
+      }
+
+      function useMyLocation() {
+        if (!navigator.geolocation) { setStatus(T('locDenied'), true); return; }
+        setStatus(T('locating'));
+        navigator.geolocation.getCurrentPosition(function (pos) {
+          state.data = null;
+          loadWeather({ en: T('myLocName'), hi: I18N.hi.myLocName, lat: Math.round(pos.coords.latitude * 1000) / 1000, lon: Math.round(pos.coords.longitude * 1000) / 1000, sub: '', mine: true });
+        }, function () { setStatus(T('locDenied'), true); }, { timeout: 12000, maximumAge: 300000 });
+      }
+
+      document.addEventListener('click', function (e) {
+        var t = e.target.closest ? e.target.closest('button') : null;
+        if (!t) { if (!e.target.closest || !e.target.closest('.searchbox')) closeResults(); return; }
+        if (t.hasAttribute('data-lang')) {
+          state.lang = t.getAttribute('data-lang'); store('jm_lang', state.lang); renderStatic(); if (state.data) render(); return;
+        }
+        if (t.hasAttribute('data-q')) { pickQuick(+t.getAttribute('data-q')); return; }
+        if (t.hasAttribute('data-r')) {
+          var pl = state.found[+t.getAttribute('data-r')]; closeResults(); $('q').value = ''; state.data = null; loadWeather(pl); return;
+        }
+        if (t.id === 'loc') { useMyLocation(); return; }
+        if (t.id === 'refresh') { loadWeather(); return; }
+      });
+      $('q').addEventListener('input', function () {
+        var v = this.value.trim();
+        clearTimeout(searchTimer);
+        if (v.length < 2) { closeResults(); return; }
+        searchTimer = setTimeout(function () { runSearch(v); }, 350);
+      });
+      $('q').addEventListener('keydown', function (e) { if (e.key === 'Escape') closeResults(); });
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden && state.data && Date.now() - state.loadedAt > REFRESH_MS) loadWeather();
+      });
+      setInterval(function () { if (!document.hidden && state.data) loadWeather(); }, REFRESH_MS);
+
+      var savedLang = load('jm_lang');
+      state.lang = savedLang === 'hi' || savedLang === 'en' ? savedLang : ((navigator.language || '').indexOf('hi') === 0 ? 'hi' : 'en');
+      var savedPlace = load('jm_place');
+      state.place = savedPlace && typeof savedPlace.lat === 'number' && typeof savedPlace.lon === 'number' ? savedPlace : { en: 'Jhansi', hi: 'झांसी', lat: DEFAULT_PLACE.lat, lon: DEFAULT_PLACE.lon, sub: '' };
+      renderStatic();
+      loadWeather();
+    }());
+  </script>
+</body>
+</html>
